@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const Cliente = require('../models/Cliente')
 const Ponto = require('../models/Ponto')
+const viewCliente = require('../views/Cliente')
 
 module.exports = {
     async list(req, res){
@@ -13,7 +14,7 @@ module.exports = {
             else{
                 clientes = await Cliente.findAll()
             } 
-            return res.status(200).json({dados: clientes})
+            return res.status(200).json({dados: viewCliente.renderMany(clientes)})
         } catch (err) {
             return res.status(400).json(error)
         }
@@ -21,7 +22,7 @@ module.exports = {
     async show(req, res){
         try {
             const cliente = await Cliente.findAll({where: {id: req.params.id}});
-            return res.status(200).json(cliente)
+            return res.status(200).json(viewCliente.render(cliente['0']))
         } catch (error) {
             return res.status(400).json(error)
         }

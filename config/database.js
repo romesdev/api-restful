@@ -1,11 +1,8 @@
-const Sequelize = require('sequelize');
-const sequelize = new Sequelize('postgres://postgres@localhost:5432/dat/recrutamento', 'postgres', 'pg123',
-                        {
-                            dialect: 'postgres',
-                            define: { 
-                                timestamps: false,
-                                underscored: true
-                            }
-                        });
- 
-module.exports = sequelize;
+module.exports = {
+    dialect: 'postgres', // tipo de sgbd
+    host: 'localhost', // endereco padrao
+    port: 5432, // porta padrao
+    database: 'recrutamento', // nome dado ao seu banco
+    username: 'postgres', // seu usuario do banco
+    password: 'pg123' // senha do seu banco de dados
+}

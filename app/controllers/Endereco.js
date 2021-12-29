@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize')
 const Endereco = require('../models/Endereco')
 const Ponto = require('../models/Ponto')
+const viewEndereco = require('../views/Endereco')
 
 module.exports = {
     async list(req, res){
@@ -13,7 +14,7 @@ module.exports = {
             else {
                 enderecos = await Endereco.findAll()
             }
-            return res.status(200).json({dados: enderecos})
+            return res.status(200).json({dados: viewEndereco.renderMany(enderecos)})
         } catch (error) {
             return res.status(400).json({error: error})
         }
@@ -21,7 +22,7 @@ module.exports = {
     async show(req, res){
         try {
             const endereco = await Endereco.findAll({where: {id: req.params.id}})
-            return res.status(200).json(endereco)
+            return res.status(200).json(viewEndereco.render(endereco['0']))
         } catch (error) {
             return res.status(400).json({mensagem: `Endereço ${id} não encotrado.`}, error)
         }

@@ -1,5 +1,4 @@
 const Sequelize = require('sequelize');
-const sequelize = require('../../config/sequelize');
 const database = require('../../config/sequelize')
 
 class Cliente extends Sequelize.Model { }

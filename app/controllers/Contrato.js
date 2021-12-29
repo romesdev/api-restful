@@ -4,24 +4,37 @@ const Cliente = require('../models/Cliente')
 const Endereco = require('../models/Endereco')
 const Contrato = require('../models/Contrato')
 const Historico = require('../models/Historico')
+const viewContrato = require('../views/Contrato')
 
 module.exports = {
     async list(req, res){
         try {
             const contratos = await Contrato.findAll({
-                include: [ 
-                    { model: Ponto }
+                include: [{ 
+                        model: Ponto,
+                        include: [
+                            {model: Cliente}, {model: Endereco}
+                        ]
+                    }
                 ]
             })
-            return res.status(200).json({dados: contratos})
+            return res.status(200).json({dados: viewContrato.renderMany(contratos) })
         } catch (error) {
             return res.status(400).json({error: error})
         }
     },
     async show(req, res){
         try {
-            const contrato = await Contrato.findAll({where: {id: req.params.id}, include: [ { model: Ponto } ]})
-            return res.status(200).json(contrato)
+            const contrato = await Contrato.findAll({where: {id: req.params.id}, 
+                include: [{ 
+                model: Ponto,
+                include: [
+                    {model: Cliente}, {model: Endereco}
+                ]
+            }
+        ]
+    })
+            return res.status(200).json(viewContrato.render(contrato['0']))
         } catch (error) {
             return res.status(400).json({"mensagem": `Contrato ${req.params.id} não encontrado.`})
         }
@@ -53,19 +66,23 @@ module.exports = {
         const estado = req.body.estado
         try{
             const contrato = await Contrato.findAll({ where: { id: id} , atributes: ['estado'] })
-            
-            if (estado == "Desativado Temporario" && contrato['0'].estado == "Em vigor"){
+            const estadoAntigo = contrato['0'].estado
+            if (estado == "Desativado Temporario" && estadoAntigo == "Em vigor"){
                 const contratoAtual = await Contrato.update( 
                                         {estado: estado},
                                         {where: {id: {[Op.eq]: id }}}
                                     )
                 return res.status(201).json({ mensagem:`Mudança de estado do item ${req.params.id}`})
             
-            } if (contrato['0'].estado == "Desativado Temporario") {
+            } if (estadoAntigo == "Desativado Temporario") {
                 const contratoAtual = await Contrato.update(
                                         {estado: estado},
                                         {where: {id: {[Op.eq]: id }}}
                                     )
+                if (estado == "Cancelado")
+                    await Contrato.destroy( {where: {id: id } })
+                
+                await Historico.create({estado, estadoAntigo})
                 return res.status(204).json({ mensagem:`Mudança de estado do item ${req.params.id}`})
             } else {
                 return res.status(400).json({ mensagem:'Não é possível realizar a atualização do estado'})
@@ -78,7 +95,9 @@ module.exports = {
     async delete(req, res){
         const id = req.params.id
         try {            
-            await Historico.create({contrato_id: id, estado_posterior: 'Desativado Temporario', estado_anterior: 'Em vigor'})
+            const contrato = await Contrato.findAll({ where: {id: id} })
+            const estado = contrato['0'].estado
+            await Historico.create({contrato_id: id, estado_posterior: 'Desativado Temporario', estado_anterior: estado})
             await Contrato.destroy( {where: {id: id } })
             return res.status(204).json({mensagem: `Exclusão de item de ID ${req.params.id} feita com sucesso!`})
         } catch (err) {

@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize')
 const Historico = require('../models/Historico')
+const viewHistorico = require('../views/Historico')
 
 module.exports = {
     async list(req, res){
@@ -9,7 +10,7 @@ module.exports = {
                 where: {contrato_id: id}, 
                 order:[ ['data_criacao', 'ASC'] ]
             })
-            return res.status(200).json({dados: historicos})
+            return res.status(200).json({dados: viewHistorico.renderMany(historicos) })
         } catch (error) {
             return res.status(400).json({error: error})
         }
@@ -31,17 +32,6 @@ module.exports = {
             return res.status(400).json(error)
         }
     },
-    // async update(req, res){
-    //     const Op = Sequelize.Op
-    //     const {logradouro, bairro, numero} = req.body;
-    //     const id = req.params.id;
-    //     try {
-    //         const ponto = await Ponto.update({logradouro, bairro, numero}, {where: {id: {[Op.eq]: id }}})
-    //         return res.status(204).json(ponto)
-    //     } catch (error) {
-    //         return res.status(400).json(error)         
-    //     }
-    // },
     async delete(req, res){
         try {
             await Historico.destroy({where: {id: req.params.id }});

@@ -3,7 +3,6 @@ const database = require('../../config/sequelize')
 const Cliente = require('../models/Cliente')
 const Endereco = require('./Endereco')
 
-
 class Ponto extends Sequelize.Model { }
 
 Ponto.init({

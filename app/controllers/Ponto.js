@@ -3,24 +3,37 @@ const Ponto = require('../models/Ponto');
 const Cliente = require('../models/Cliente')
 const Endereco = require('../models/Endereco')
 const Contrato = require('../models/Contrato')
+const viewPonto = require('../views/Ponto')
 
 module.exports = {
     async list(req, res){
+        const filter = req.query
         try {
-            const pontos = await Ponto.findAll({
+            let pontos = ''
+            if (filter != null) 
+                pontos = await Ponto.findAll({ where: filter,
                 include: [ {model: Cliente}, {model: Endereco} ]
                 })
-            return res.status(200).json({dados: pontos})
+
+            else{ 
+                pontos = await Ponto.findAll({
+                include: [ {model: Cliente}, {model: Endereco} ]
+                })
+            }
+            return res.status(200).json({dados: viewPonto.renderMany(pontos)})
         } catch (error) {
             return res.status(400).json({error: error})
         }
     },
     async show(req, res){
         try {
-            const ponto = await Ponto.findAll({where: {id: req.params.id}})
-            return res.status(200).json(ponto)
+            const ponto = await Ponto.findAll({ where: {id: req.params.id},
+                include: [ {model: Cliente}, {model: Endereco} ]
+            })
+            return res.status(200).json( viewPonto.render(ponto['0']) )
+            
         } catch (error) {
-            return res.status(400).json({mensagem: `Ponto ${id} não encontrado.`}, error)
+            return res.status(400).json({mensagem: `Ponto ${req.params.id} não encontrado.`})
         }
     },
     async create(req, res){
@@ -44,23 +57,10 @@ module.exports = {
             return res.status(400).json(error)
         }
     },
-    // async update(req, res){
-    //     const Op = Sequelize.Op
-    //     const {logradouro, bairro, numero} = req.body;
-    //     const id = req.params.id;
-    //     try {
-    //         const ponto = await Ponto.update({logradouro, bairro, numero}, {where: {id: {[Op.eq]: id }}})
-    //         return res.status(204).json(ponto)
-    //     } catch (error) {
-    //         return res.status(400).json(error)         
-    //     }
-    // },
     async delete(req, res){
-        let id = req.params.id
-        
+        let id = req.params.id       
         try {
             await Contrato.destroy( { where: { ponto_id: id} } )
-            //await Ponto.destroy( { where: {id: id } } )
             return res.status(204).json({mensagem: `Exclusão de item de ID ${req.params.id} feita com sucesso!`});
         } catch (err) {
             return res.status(400).json({mensagem:'Erro na exclusão'})
