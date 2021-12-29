@@ -3,8 +3,10 @@ const Historico = require('../models/Historico')
 
 module.exports = {
     async list(req, res){
+        let id = req.params.id
         try {
-            const historicos = await Historico.findAll({
+            const historicos = await Historico.findAll({ 
+                where: {contrato_id: id}, 
                 order:[ ['data_criacao', 'ASC'] ]
             })
             return res.status(200).json({dados: historicos})

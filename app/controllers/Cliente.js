@@ -4,11 +4,18 @@ const Ponto = require('../models/Ponto')
 
 module.exports = {
     async list(req, res){
+        const filter = req.query
+        
         try {
-            const clientes = await Cliente.findAll()
-            return res.status(200).json(clientes);
+            let clientes = ''
+            if (filter != null) 
+                clientes = await Cliente.findAll( { where: filter } )
+            else{
+                clientes = await Cliente.findAll()
+            } 
+            return res.status(200).json({dados: clientes})
         } catch (err) {
-            return res.status(400).json(error);
+            return res.status(400).json(error)
         }
     },
     async show(req, res){
@@ -22,8 +29,19 @@ module.exports = {
     async create(req, res){
         const {nome, tipo} = req.body;
         try {
-            const cliente = await Cliente.create({nome, tipo});
-            return res.status(201).json(cliente)
+            const cliente = await Cliente.restore( { // tenta restaurar um registro deletado
+                where: {nome: nome, tipo: tipo, 
+                        data_remocao: {
+                            [Sequelize.Op.not]: null
+                        }} })
+            
+            if (cliente != 1){ // criar um novo registro
+                let clienteNovo = await Cliente.create({nome, tipo})
+                return res.status(201).json(clienteNovo)
+            }
+
+            // retorna um registro restaurado atualizado 
+            return res.status(204).json(cliente)
         } catch (error) {
             return res.status(400).json(error)
         }
@@ -41,9 +59,11 @@ module.exports = {
         }
     },
     async delete(req, res){
+        let id = req.params.id
+
         try {
-            await Ponto.destroy( {where: { cliente_id: req.params.id } })
-            await Cliente.destroy({where: {id: req.params.id }})
+            await Ponto.destroy( {where: { cliente_id: id } })
+            await Cliente.destroy({where: { id: id } })
             return res.status(204).json({msg: `Exclusão de item de ID ${req.params.id} feita com sucesso!`})
         } catch (error) {
             console.error(error)
