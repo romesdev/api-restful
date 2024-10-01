@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/romesdev/api-restful#readme",
   "dependencies": {
-    "express": "^4.17.2",
+    "express": "^4.21.0",
     "nodemon": "^2.0.15",
     "pg": "^8.7.1",
     "pg-hstore": "^2.3.4",
